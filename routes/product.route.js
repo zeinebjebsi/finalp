@@ -1,7 +1,7 @@
 const express=require('express');
 const { addProduct, getAllProd, getOneProd, getMyProd, editProd, deleteProd } = require('../controllers/product.controller');
 const isAuth = require('../middlewares/isAuth');
-
+const isAdmin = require('../middlewares/isAdmin'); 
 
 
 const router=express.Router();
@@ -12,7 +12,7 @@ const router=express.Router();
 //
 // });
 
-router.post('/addProd', isAuth, addProduct );
+router.post('/addProd', isAdmin, addProduct );
 
 router.get('/allProd', getAllProd );
 router.get('/myProd',isAuth,getMyProd);

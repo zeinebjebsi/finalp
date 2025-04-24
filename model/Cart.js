@@ -1,4 +1,4 @@
-// models/Cart.js
+// model/Cart.js
 const mongoose = require("mongoose");
 
 const cartSchema = new mongoose.Schema({
@@ -6,12 +6,12 @@ const cartSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
-    unique: true, // Un seul panier par utilisateur
+    unique: true,
   },
   items: [
     {
       product: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
-      quantity: { type: Number, default: 1, min: 1 },
+      quantity: { type: Number, min: 1 },
     },
   ],
 });

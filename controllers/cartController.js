@@ -1,5 +1,5 @@
-const Cart = require("../models/Cart");
-const Product = require("../models/Product");
+const Cart = require("../model/Cart");
+const Product = require("../model/Product");
 
 // ✅ Ajouter un produit au panier
 exports.addToCart = async (req, res) => {
@@ -33,11 +33,25 @@ exports.addToCart = async (req, res) => {
 // ✅ Obtenir le panier de l'utilisateur
 exports.getCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id }).populate("items.product");
-    if (!cart) return res.status(404).json({ msg: "Panier vide" });
-    res.status(200).json(cart);
-  } catch (error) {
-    res.status(500).json({ msg: error.message });
+    const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    if (!cart) {
+      return res.status(404).json({ message: 'Panier introuvable' });
+    }
+
+    const cartItems = cart.items.map((item) => ({
+      _id: item.product._id,
+      titre: item.product.title,
+      image: item.product.image,
+      price: item.product.price,
+      quantite: item.product.quantite, // ⚠️ ici c’est bien 'quantite'
+      quantity: item.quantity,
+      productId: item.product._id,
+    }));
+
+    res.json(cartItems);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
@@ -45,21 +59,36 @@ exports.getCart = async (req, res) => {
 exports.updateQuantity = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
+    const cart = await Cart.findOne({ user: req.user.id });
 
-    const cart = await Cart.findOne({ user: req.user._id });
-    if (!cart) return res.status(404).json({ msg: "Panier introuvable" });
+    const item = cart.items.find((i) => i.product.toString() === productId);
+    if (item) {
+      item.quantity = quantity;
+    }
 
-    const item = cart.items.find((item) => item.product.toString() === productId);
-    if (!item) return res.status(404).json({ msg: "Produit non trouvé" });
-
-    item.quantity = quantity;
     await cart.save();
 
-    res.status(200).json(cart);
-  } catch (error) {
-    res.status(500).json({ msg: error.message });
+    const populatedCart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+
+    const cartItems = populatedCart.items.map((item) => ({
+      _id: item.product._id,
+      titre: item.product.title,
+      image: item.product.image,
+      price: item.product.price,
+      quantite: item.product.quantite,
+      quantity: item.quantity,
+      productId: item.product._id,
+    }));
+
+    res.json(cartItems);
+  } catch (err) {
+    console.error('Erreur updateQuantity:', err);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+
+
+
 
 // ✅ Supprimer un produit
 exports.removeFromCart = async (req, res) => {
